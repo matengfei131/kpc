@@ -129,10 +129,49 @@ if (always) {
                         <b:content>{tooltip(value[1])}</b:content>
                     </Tooltip>
                 </div>
-                <div class="k-handle-wrapper" v-if={isRange}
-                    style={handleEndStyle}
+                <div class="k-handle-wrapper" v-if={ isRange }
+                    style={ handleEndStyle }
                 >
+                    <Tooltip ref="tooltip2" 
+                        disabled={ !showTooltip }
+                        { ..._tooltipProps }
+                    >
+                        <div
+                            class={{
+                                "k-handle": true,
+                                "k-active": (_isSecond && _sliderValue[0] === this._min) || 
+                                    (_isFirst && _sliderValue[1] !== this._max)
+                            }}
+                            ref={ dom => this.$sliderSecondBtn = dom }
+                            ev-mousedown={ this._onDrag.bind(this, "_isSecond") }
+                            tabindex={ disabled ? "-1" : "0" }
+                            ev-keydown={ this._onKeydown.bind(this, '_isSecond') }
+                            ev-focusin={ this._onFocusin.bind(this, '_isSecond') }
+                            ev-focusout={ this._onFocusout.bind(this, '_isSecond') }
+                            ev-click={ this._stopPropagation }
+                        ></div>
+                        <b:content>{ tooltip(value[1]) }</b:content>
+                    </Tooltip>
                 </div>
+                { (() => {
+                    if (isShowStop && step) {
+                        const ret = [];
+                        const total = max - min;
+                        let i = min;
+                        while (true) {
+                            let [step] = this._getStep(i, 'increase');
+                            i = i + step;
+                            if (Number(i.toFixed(10)) >= max) {
+                                break
+                            }
+
+                            ret.push(<i class="k-point" 
+                                style={{ left: ((i - min) / total * 100) + '%' }}
+                            ></i>);
+                        }
+                        return ret;
+                    }
+                })() }
             </div>
         </div>
         <div class="k-box" v-if={isShowEnd && !marks}>
