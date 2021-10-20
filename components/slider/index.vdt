@@ -143,8 +143,8 @@ if (always) {
                                     (_isFirst && _sliderValue[1] !== this._max)
                             }}
                             ref={ dom => this.$sliderSecondBtn = dom }
-                            ev-mousedown={ this._onDrag.bind(this, "_isSecond") }
-                            tabindex={ disabled ? "-1" : "0" }
+                            ev-mousedown={ this.onDrag.bind(this, '_isSecond') }
+                            tabindex={ disabled ? '-1' : '0' }
                             ev-keydown={ this._onKeydown.bind(this, '_isSecond') }
                             ev-focusin={ this._onFocusin.bind(this, '_isSecond') }
                             ev-focusout={ this._onFocusout.bind(this, '_isSecond') }
@@ -159,9 +159,9 @@ if (always) {
                         const total = max - min;
                         let i = min;
                         while (true) {
-                            let [step] = this._getStep(i, 'increase');
-                            i = i + step;
-                            if (Number(i.toFixed(10)) >= max) {
+                            let s = this._getStep(i);console.log(min, max, s);
+                            i = i + s;
+                            if (Number(i).toFixed(10) >= max) {
                                 break
                             }
 
@@ -178,6 +178,28 @@ if (always) {
             <span ev-click={this._setOneValue.bind(this, min)}>{min + unit} </span>
             <span ev-click={this._setOneValue.bind(this, max)}>{max + unit}</span>
         </div>
+        <div class="k-marks" v-if={ marks }>{ do {
+            // const counts = step ? Math.floor((max - min) / step) : (max - min);
+            const ret = [];
+            for (let key in marks) {
+                const mark = marks[key];
+                const isActive = !isRange ? key == value : value.find(v => v == key) !== undefined;
+                let text = mark;
+                if (Array.isArray(mark)) {
+                    text = isActive && mark[1] ? mark[1] : mark[0];
+                }
+                ret.push(
+                    <span
+                        style={{
+                            left: ((key - min) / (max - min) * 100) + '%'
+                        }}
+                        ev-click={ this._setOneValue.bind(self, key) }
+                        class={{'k-active': isActive}}
+                    >{text}</span>
+                );
+            }
+            ret;
+        } }</div>
     </div>
     <div class="k-spinner-wrapper"
         v-if={isShowInput && !isRange}

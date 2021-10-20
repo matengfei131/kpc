@@ -25,6 +25,7 @@ export class TooltipContent<T extends TooltipContentProps = TooltipContentProps>
     @bind
     onEnter() {
         const feedback = this.dropdown!.position();
+        if (!feedback) return;
 
         if (!(this.dropdown as Tooltip).get('showArrow')) return;
 

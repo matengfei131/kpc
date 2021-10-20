@@ -1,7 +1,7 @@
 import {Component, TypeDefs} from 'intact';
 import template from './index.vdt';
 import {minMaxStep, bind} from '../utils';
-import {parseStep} from '../spinner';
+import step from '~/components/slider/demos/step';
 
 export interface SliderProps {
     max: Number,
@@ -19,6 +19,12 @@ export interface SliderProps {
     always: Boolean,
     animate: Boolean,
     tooltipProps: Object,
+
+    _sliderValue: Number,
+    _inputValue: Number,
+    _isDragging: Boolean,
+    _isFirst: Boolean,
+    _isSecond: Boolean
 }
 
 const typeDefs: Required<TypeDefs<SliderProps>> = {
@@ -37,6 +43,12 @@ const typeDefs: Required<TypeDefs<SliderProps>> = {
     always: Boolean,
     animate: Boolean,
     tooltipProps: Object,
+
+    _sliderValue: Number,
+    _inputValue: Number,
+    _isDragging: Boolean,
+    _isFirst: Boolean,
+    _isSecond: Boolean
 };
 
 const defaults = (): Partial<SliderProps> => ({
@@ -63,6 +75,10 @@ const defaults = (): Partial<SliderProps> => ({
     _isSecond: false,
 });
 
+function isEqual(v1:any, v2:any) {
+    return JSON.stringify(v1) === JSON.stringify(v2);
+}
+
 export default class Slider <T extends SliderProps = SliderProps> extends Component<T> {
     static template = template;
     static typeDefs = typeDefs;
@@ -74,11 +90,29 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
 
     static blocks = ['tooltip'];
 
-    _getStep() {
-        return [this.get('step'), this.get('min')];
+    @bind
+    private _getStep(i) {
+        let step = this.get('step');
+        if (Object.prototype.toString.call(step) === '[object Object]') {
+            let keys = Object.keys(step);
+            for (let j = 0; j < keys.length; j++) {
+                if (keys[j] <= i && i < keys[j+1]) {
+                    return step[Number(keys[j])];
+                }
+                else if (i < keys[0]) {
+                    return step[Number(keys[0])];
+                }
+                else if (i >= keys[keys.length-1]) {
+                    return step[Number(keys[keys.length-1])];
+                }
+            }
+        } else {
+            return step;
+        }
     }
 
-    _setFixedValue(value, isFromSpinner) {
+    @bind
+    private _setFixedValue(value, isFromSpinner) {
         const fixedValue = this._getFixedValue(value);
         this.set({
             value: fixedValue,
@@ -87,7 +121,8 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
         });
     }
 
-    _getFixedValue(value) {
+    @bind
+    private _getFixedValue(value) {
         let {min, isRange} = this.get();
 
         let fixedValue;
@@ -104,7 +139,8 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
         return fixedValue;
     }
 
-    _fix(v) {
+    @bind
+    private _fix(v) {
         let {max} = this.get();
         const [step, min] = this._getStep(v);
 
@@ -117,8 +153,9 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
         return minMaxStep(v, min, max, step);
     }
 
-    _clickWrapper(e) {
-        if (this.get('disabled') || this.get('_isDragging')) return;
+    @bind
+    private _clickWrapper(e) {
+        if (!this || this.get('disabled') || this.get('_isDragging')) return;
 
         let currentPosition = e.clientX;
         let newValue = this._getSlidingValue(currentPosition);
@@ -129,7 +166,8 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
         this._setFixedValue(newValue);
     }
 
-    _generateRangeValue(v) {
+    @bind
+    private _generateRangeValue(v) {
         const [min, max] = this.get('value');
         if (Math.abs(min - v) <= Math.abs(max - v)) {
             return [v, max];
@@ -138,7 +176,8 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
         }
     }
 
-    _getSlidingValue(pos) {
+    @bind
+    private _getSlidingValue(pos) {
         const rect = this.$slider.getBoundingClientRect();
         const percent = (pos - rect.left) / rect.width;
         const {max, min} = this.get();
@@ -153,7 +192,8 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
         }
     }
 
-    onDrag(indexFlag, e) {
+    @bind
+    private onDrag(indexFlag, e) {
         if (this.get('disabled')) return;
 
         this._isDragging = true;
@@ -167,7 +207,8 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
         window.addEventListener('mouseup', this.__onRangeSlideEnd);
     }
 
-    _onRangeSliding(indexFlag, e){
+    @bind
+    private _onRangeSliding(indexFlag, e){
         let tempValue = this._getSlidingValue(e.clientX, this.get('_isDragging'));
         let fixedValue;
 
@@ -187,7 +228,8 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
         this._showTooltip();
     }
     
-    _showTooltip() {
+    @bind
+    private _showTooltip() {
         if (!this.get('showTooltip')) return;
 
         const {tooltip1, tooltip2} = this.refs;
@@ -199,7 +241,8 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
         }
     }
 
-    _hideTooltip() {
+    @bind
+    private _hideTooltip() {
         const {tooltip1, tooltip2} = this.refs;
         tooltip1.hide();
         if (tooltip2) {
@@ -207,7 +250,8 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
         }
     }
 
-    _getTempValue(value, isRange, min, max, isFirst) {
+    @bind
+    private _getTempValue(value, isRange, min, max, isFirst) {
         if (isRange) {
             if (isFirst) {
                 return [
@@ -224,7 +268,8 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
         return value;
     }
 
-    _onRangeSlideEnd(indexFlag, e){
+    @bind
+    private _onRangeSlideEnd(indexFlag, e){
         if (this.get('_isDragging')) {
             this.set('_isDragging', false, {async: true});
             let newValue = this._getSlidingValue(e.clientX);
@@ -262,7 +307,8 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
         }
     }
 
-    _onFocusin(indexFlag, e) {
+    @bind
+    private _onFocusin(indexFlag, e) {
         if (this.get('disabled')) return;
 
         // when mouse down the handle will focus too
@@ -301,7 +347,8 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
         this._showTooltip();
     }
 
-    _onFocusout(indexFlag) {
+    @bind
+    private _onFocusout(indexFlag) {
         if (this.get('disabled') || this._isDragging) return;
 
         if (this.get('isRange')) {
@@ -316,7 +363,8 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
         this._hideTooltip();
     }
 
-    _onKeydown(indexFlag, e) {
+    @bind
+    private _onKeydown(indexFlag, e) {
         if (this.get('disabled')) return;
 
         const value = this.get('value');
@@ -330,13 +378,15 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
     }
 
     // trigger change event when keyup
-    _onKeyUp({keyCode}) {
+    @bind
+    private _onKeyUp({keyCode}) {
         if (keyCode === 37 || keyCode === 39) {
             this._triggerChangeEvent();
         }
     }
 
-    _triggerChangeEvent() {
+    @bind
+    private _triggerChangeEvent() {
         const {value} = this.get();
         if (!isEqual(this._oldValue, value)) {
             this._oldValue = value;
@@ -344,7 +394,8 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
         }
     }
 
-    _setValue(indexFlag, step) {
+    @bind
+    private _setValue(indexFlag, step) {
         const value = this.get('value');
 
         if (!this.get('isRange')) {
@@ -377,11 +428,13 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
         this._showTooltip();
     }
 
-    _onChange() {
+    @bind
+    private _onChange() {
         this.set('_inputValue', this.get('value'));
     }
 
-    _setOneValue(v) {
+    @bind
+    private _setOneValue(v) {
         if (!this.get('isRange')) {
             this._setFixedValue(v);
         } else {
@@ -389,12 +442,14 @@ export default class Slider <T extends SliderProps = SliderProps> extends Compon
         }
     }
 
-    _stopPropagation(e) {
+    @bind
+    private _stopPropagation(e) {
         /* istanbul ignore next */
         e.stopPropagation();
     }
 
-    _destroy() {
+    @bind
+    private _destroy() {
         this._onRangeSlideEnd()
     }
 }
