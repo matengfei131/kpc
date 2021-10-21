@@ -1,0 +1,113 @@
+import {linkEvent} from 'intact';
+import {Spinner} from '../spinner';
+import {Tooltip} from '../tooltip';
+import {getRestProps} from '../utils';
+import {makeStyles} from './styles';
+
+const {
+    disabled, className, max,
+    min, unit, isShowInput,
+    isRange, step, value,
+    spinnerProps, isShowEnd,
+    isShowTooltip, animate,
+} = this.get();
+const {
+    onStart, trackRef, dragging,
+    firstThumbRef, secondThumbRef,
+    onFocusin
+} = this.draggable;
+
+const classNameObj = {
+    'k-slider': true,
+    'k-disabled': disabled,
+    'k-dragging': dragging.value || !animate,
+    [className]: className,
+    [makeStyles()]: true,
+};
+
+const {barStyle, thumbFirstStyle, thumbSecondStyle} = this.styles();
+const {onSpinnerChange} = this.value;
+const {onKeydown, onKeyup} = this.keyboard;
+const {firstTooltipRef, secondTooltipRef, getTooltipProps, hide} = this.tooltip;
+const tooltipProps = getTooltipProps();
+const tooltip = value => <b:tooltip params={value}>{value}</b:tooltip>
+const createThumb = (thumbStyle, isFirst, ref, value, tooltipRef) => {
+    return (
+        <div class="k-slider-thumb-wrapper" style={thumbStyle}>
+            <Tooltip
+                disabled={!isShowTooltip}
+                ref={tooltipRef}
+                {...tooltipProps}
+                class="k-slider-tooltip"
+            >
+                <div class="k-slider-thumb"
+                    tabindex={disabled ? '-1' : '0'}
+                    ev-mousedown={onStart} 
+                    ev-focusin={linkEvent(isFirst, onFocusin)}
+                    ev-focusout={hide}
+                    ev-keydown={onKeydown}
+                    ev-keyup={onKeyup}
+                    ref={ref}
+                ></div>
+                <b:content>{tooltip(value)}</b:content>
+            </Tooltip>
+        </div>
+    );
+};
+
+const {onClickTrack, setOneValue} = this.click;
+const points = this.points();
+const marks = this.marks();
+<div class={classNameObj} {...getRestProps(this)}>
+    <div class="k-slider-main">
+        <div class="k-slider-track-wrapper" ev-click={onClickTrack}>
+            <div class="k-slider-track" ref={trackRef}>
+                <div class="k-slider-bar" style={barStyle}></div>
+                {createThumb(
+                    thumbFirstStyle,
+                    true,
+                    firstThumbRef,
+                    isRange ? value[0] : value,
+                    firstTooltipRef,
+                )}
+                <template v-if={isRange}>
+                    {createThumb(
+                        thumbSecondStyle,
+                        false,
+                        secondThumbRef,
+                        value[1],
+                        secondTooltipRef,
+                    )}
+                </template>
+                <i v-for={points} 
+                    class={{'k-slider-point': true, 'k-active': $value.active}}
+                    style={$value.style}
+                ></i>
+            </div>
+        </div>
+        <div class="k-slider-marks" v-if={marks.length}>
+            <span v-for={marks}
+                style={$value.style}
+                ev-click={linkEvent($value.value, setOneValue)}
+                class={{'k-active': $value.active}}
+            >{$value.text}</span>
+        </div>
+        <div class="k-slider-ends" v-else-if={isShowEnd}>
+            <span ev-click={linkEvent(min, setOneValue)}>{min + unit}</span>
+            <span ev-click={linkEvent(max, setOneValue)}>{max + unit}</span>
+        </div>
+    </div>
+    <div class="k-slider-spinner" v-if={isShowInput && !isRange}>
+        <Spinner
+            disabled={disabled}
+            max={max}
+            min={min}
+            step={step || 0.01}
+            vertical
+            value={value}
+            suffix={unit}
+            ev-$change:value={onSpinnerChange}
+            {...spinnerProps}
+        />
+    </div>
+</div>

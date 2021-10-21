@@ -5,18 +5,18 @@ const {
     showArrow, confirm, className,
     theme, hoverable, trigger,
     value, cancelText, okText,
-    size,
+    size, always,
 } = this.dropdown.get();
-const {
-    children,
-    _arrow
-} = this.get();
+const {children} = this.get();
+const {arrowRef, arrowType} = this.arrow;
 
 const classNameObj = {
     'k-tooltip-content': true,
     'k-hoverable': hoverable || trigger === 'click',
+    'k-always': always,
     [`k-${theme}`]: true,
     [`k-${size}`]: size !== 'default',
+    [className]: className,
     [makeStyles()]: true,
 };
 
@@ -30,9 +30,9 @@ const classNameObj = {
         <i v-if={showArrow}
             class={{
                 "k-tooltip-arrow": true,
-                [`k-${_arrow}`]: _arrow,
+                [`k-${arrowType.value}`]: arrowType.value,
             }}
-            ref={this.arrowRef}
+            ref={arrowRef}
         ></i>
         <div class="k-tooltip-buttons" v-if={confirm}>
             <b:buttons>

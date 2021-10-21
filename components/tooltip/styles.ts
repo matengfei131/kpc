@@ -58,12 +58,14 @@ export default function makeStyles() {
             pointer-events: none;
 
             // hoverable
-            &.k-hoverable {
+            &.k-hoverable,
+            &.k-always {
                 pointer-events: all;
             }
 
             // arrow
             .k-tooltip-arrow {
+                pointer-events: none;
                 &:before, & {
                     position: absolute;
                     display: block;
