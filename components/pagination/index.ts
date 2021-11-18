@@ -4,17 +4,26 @@ import {Sizes, sizes} from '../../styles/utils';
 import {bind} from '../utils';
 
 export interface PaginationProps {
-    size: Sizes,
-    counts: number | string,
-    total: number,
-    current: number,
-    limit: number,
-    limits: number[],
-    noBorder: boolean,
-    simple: boolean,
-    showTotal: boolean,
-    showGoto: boolean,
-    showLimits: boolean,
+    size?: Sizes,
+    counts?: number | string,
+    total?: number,
+    current?: number,
+    limit?: number,
+    limits?: number[],
+    noBorder?: boolean,
+    simple?: boolean,
+    showTotal?: boolean,
+    showGoto?: boolean,
+    showLimits?: boolean,
+}
+
+export interface PaginationEvents {
+    change: [ChangeData] 
+}
+
+type ChangeData = {
+    limit: number
+    current: number
 }
 
 const typeDefs: Required<TypeDefs<PaginationProps>> = {
@@ -38,14 +47,11 @@ const defaults = (): Partial<PaginationProps> => ({
     current: 1,
     limit: 10,
     limits: [10, 20, 50],
-    noBorder: false,
-    simple: false,
     showTotal: true,
-    showGoto: false,
     showLimits: true,
 })
 
-export class Pagination<T extends PaginationProps = PaginationProps> extends Component<T> {
+export class Pagination extends Component<PaginationProps, PaginationEvents> {
     static template = template;
     static typeDefs = typeDefs;
     static defaults = defaults;
@@ -54,7 +60,7 @@ export class Pagination<T extends PaginationProps = PaginationProps> extends Com
 
     init() {
         // avoid setting incorrect value
-        this.changePage(this.get('current'));
+        this.changePage(this.get('current')!);
 
         this.watch('limit', v => {
             const oldCurrent = this.get('current');
@@ -68,56 +74,53 @@ export class Pagination<T extends PaginationProps = PaginationProps> extends Com
                 this.set('current', 1);
                 this.ignore = false;
             }
-            this.trigger('change', {limit: v, current: 1});
+            this.trigger('change', {limit: v!, current: 1});
         }, {inited: true});
         
         this.watch('current', v => {
             if (this.ignore) return;
-            this.trigger('change', {limit: this.get('limit'), current: v});
+            this.trigger('change', {limit: this.get('limit')!, current: v!});
         }, {inited: true});
     }
 
     @bind
     changePage(page: number) {
         const {total, limit} = this.get();
-        const totalPages = Math.ceil(total / limit);
+        const totalPages = Math.ceil(total! / limit!);
         
-        if(page > totalPages) {
+        if (page > totalPages) {
             page = totalPages;
         }
-        if(page < 1) {
+        if (page < 1) {
             page = 1;
         }
 
         if (this.get('current') !== page) {
             this.set('current', page);
-        } else {
-            // force update to fix invalid input
-            this.forceUpdate();
         }
     }
 
     @bind
-    prev() {
-        this.changePage(this.get('current') - 1);
+    private prev() {
+        this.changePage(this.get('current')! - 1);
     }
 
     @bind
-    next() {
-        this.changePage(this.get('current') + 1);
+    private next() {
+        this.changePage(this.get('current')! + 1);
     }
 
     @bind
-    fastPrev() {
+    private fastPrev() {
         const {current, counts} = this.get();
-        const page = current - Math.ceil(Number(counts) / 2);
+        const page = current! - Math.ceil(Number(counts) / 2);
         this.changePage(page);
     }
 
     @bind
-    fastNext() {
+    private fastNext() {
         const {current, counts} = this.get();
-        const page = current + Math.ceil(Number(counts) / 2);
+        const page = current! + Math.ceil(Number(counts) / 2);
         this.changePage(page);
     }
 

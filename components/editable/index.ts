@@ -1,7 +1,8 @@
-import {Component, TypeDefs, createRef} from 'intact';
+import {Component, TypeDefs, createRef, nextTick} from 'intact';
 import template from './index.vdt';
 import {_$} from '../../i18n';
 import {bind} from '../utils';
+import type {Input} from '../input';
 
 export interface EditableProps {
     editing?: boolean,
@@ -12,6 +13,11 @@ export interface EditableProps {
     tip?: string | number,
     trim?: boolean,
     invalid?: boolean,
+}
+
+export interface EditableEvents {
+    error: [string | number]
+    change: [string, string | number | undefined]
 }
 
 const typeDefs: Required<TypeDefs<EditableProps>> = {
@@ -31,32 +37,19 @@ const defaults = (): Partial<EditableProps> => ({
     trim: true,
 })
 
-export class Editable<T extends EditableProps = EditableProps> extends Component<T> {
+export class Editable extends Component<EditableProps, EditableEvents> {
     static template = template;
     static typeDefs = typeDefs;
     static defaults = defaults;
-    static events = {
-        change: true,
-        error: true,
-    };
 
-    private elementRef = createRef<HTMLInputElement>();
-
-    init(){
-        this.watch('editing', v => {
-            if (v) {
-                // TODO: delete，以下为了修复Input组件defaultValue属性未生效
-                this.elementRef.value!.focus();
-                setTimeout(() => {
-                    this.elementRef.value!.select();
-                });
-            }
-        }, {presented: true});
-    }
+    private inputRef = createRef<Input>();
 
     @bind
-    private onClick() {
+    private edit() {
         this.set('editing', true);
+        nextTick(() => {
+            this.inputRef.value!.select();
+        });
     }
 
     @bind

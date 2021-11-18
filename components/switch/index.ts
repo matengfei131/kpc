@@ -5,16 +5,26 @@ import {bind} from '../utils';
 import {useDraggable} from './useDraggable';
 
 export interface SwitchProps {
-    name: string
-    on: string 
-    off: string 
-    value: boolean
-    trueValue: any
-    falseValue: any
-    width: number | string
-    height: number | string
-    size: Sizes
-    disabled: boolean
+    name?: string
+    on?: string 
+    off?: string 
+    value?: boolean
+    trueValue?: any
+    falseValue?: any
+    width?: number | string
+    height?: number | string
+    size?: Sizes
+    disabled?: boolean
+}
+
+export interface SwitchEvents {
+    click: [MouseEvent]
+    keypress: [KeyboardEvent]
+}
+
+export interface SwitchBlocks {
+    off: null
+    on: null
 }
 
 const typeDefs: Required<TypeDefs<SwitchProps>> = {
@@ -41,7 +51,7 @@ interface MouseEventWithIgnore extends MouseEvent {
     _switchIgnore?: boolean
 }
 
-export class Switch extends Component<SwitchProps> {
+export class Switch extends Component<SwitchProps, SwitchEvents, SwitchBlocks> {
     static template = template;
     static typeDefs = typeDefs;
     static defaults = defaults;

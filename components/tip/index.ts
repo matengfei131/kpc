@@ -1,36 +1,15 @@
-import {Component, TypeDefs} from 'intact';
 import template from './index.vdt';
-import {Colors} from '../types';
-import {bind} from '../utils';
+import {Tag, TagProps, TagEvents, TagBlocks} from '../tag/base';
 
-interface TipProps {
-    type?: Colors
-    disabled?: boolean
-    closable?: boolean
-    show?: boolean
+export interface TipProps extends TagProps { }
+
+export interface TipEvents extends TagEvents { }
+
+export interface TipBlocks extends TagBlocks {
+    title: null
+    close: null
 }
 
-const typeDefs: Required<TypeDefs<TipProps>> = {
-    type: ['default', 'primary', 'warning', 'danger', 'success'],
-    disabled: Boolean,
-    closable: Boolean,
-    show: Boolean
-};
-
-const defaults = (): Partial<TipProps> => ({
-    type: 'default',
-    show: true
-});
-
-export default class Tip<T extends TipProps = TipProps> extends Component<T> {
+export class Tip extends Tag<TipProps, TipEvents, TipBlocks> {
     static template = template;
-    static typeDefs = typeDefs;
-    static defaults = defaults;
-
-    @bind
-    private handleCloseClick(e: MouseEvent): void {
-        e.stopPropagation();
-        this.set('show', false);
-        this.trigger('close', e);
-    }
 }

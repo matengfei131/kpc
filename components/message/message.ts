@@ -34,12 +34,11 @@ const defaults = (): Partial<MessageProps> => ({
     duration: 5000,
     type: 'info',
     closable: true,
-    hideIcon: false,
 });
 
 let messages: Messages | null = null;
 
-export class Message<T extends MessageProps = MessageProps> extends Component<T> {
+export class Message extends Component<MessageProps> {
     static template = template;
     static typeDefs = typeDefs;
     static defaults = defaults;

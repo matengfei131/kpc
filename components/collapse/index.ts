@@ -1,16 +1,19 @@
 import {Component, TypeDefs, provide} from 'intact';
 import template from './index.vdt';
-import CollapseItem from './item';
+import {CollapseItem} from './item';
 import {toggleArray} from '../utils';
+export * from './item';
 
 type ArrowType = 'left' | 'right'
 
-interface CollapseProps {
+export interface CollapseProps {
     value?: string[]
     accordion?: boolean
     arrow?: ArrowType
     noBorder?: boolean
 }
+
+export interface CollapseEvents { }
 
 const typeDefs: Required<TypeDefs<CollapseProps>> = {
     value: Array,
@@ -25,7 +28,7 @@ const defaults = (): Partial<CollapseProps> => ({
     arrow: 'right'
 });
 
-export default class Collapse<T extends CollapseProps = CollapseProps> extends Component<T> {
+export class Collapse extends Component<CollapseProps, CollapseEvents> {
     static template = template;
     static typeDefs = typeDefs;
     static defaults = defaults;
@@ -34,13 +37,11 @@ export default class Collapse<T extends CollapseProps = CollapseProps> extends C
         provide<Collapse>(COLLAPSE, this);
     }
 
-    changeValue(v: string) {
+    public changeValue(v: string) {
         const {value, accordion} = this.get();
-        const _value = accordion
-            ? this.isActive(v)
-                ? []
-                : [v]
-            : toggleArray(value, v);
+        const _value = accordion ? 
+            this.isActive(v) ? [] : [v] :
+            toggleArray(value, v);
         this.set('value', _value);
     }
 
@@ -50,5 +51,3 @@ export default class Collapse<T extends CollapseProps = CollapseProps> extends C
         return !!~value.indexOf(v);
     }
 }
-
-export {Collapse, CollapseItem};

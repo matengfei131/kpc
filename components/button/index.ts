@@ -3,8 +3,20 @@ import template from './index.vdt';
 import {ButtonGroup} from './group';
 import {bind} from '../utils';
 import {Sizes, Colors} from '../types';
+import {BUTTON_GROUP} from './constants';
+export * from './group';
 
-export interface ButtonProps {
+interface ButtonHTMLAttributes {
+    autofocus?: boolean
+    form?: string
+    formaction?: string
+    formenctype?: string
+    formmethod?: string
+    formnovalidate?: boolean
+    formtarget?: string
+}
+
+export interface ButtonProps extends ButtonHTMLAttributes {
     type?: Colors | 'none' | 'secondary' | 'link'
     size?: Sizes,
     icon?: boolean
@@ -12,7 +24,7 @@ export interface ButtonProps {
     loading?: boolean
     disabled?: boolean
     fluid?: boolean
-    htmlType?: string
+    htmlType?: 'submit' | 'reset' | 'button'
     tagName?: string | ComponentConstructor
     value?: any
     name?: string
@@ -20,7 +32,12 @@ export interface ButtonProps {
     ghost?: boolean
 }
 
-const typeDefs: Required<TypeDefs<ButtonProps>> = {
+export interface ButtonEvents {
+    click: [MouseEvent]
+    mouseup: [MouseEvent]
+}
+
+const typeDefs: Required<TypeDefs<Omit<ButtonProps, keyof ButtonHTMLAttributes>>> = {
     type: ['default', 'primary', 'warning', 'danger', 'success', 'none', 'secondary', 'link'],
     size: ['large', 'default', 'small', 'mini'],
     icon: Boolean,
@@ -39,28 +56,19 @@ const typeDefs: Required<TypeDefs<ButtonProps>> = {
 const defaults = (): Partial<ButtonProps> => ({
     type: 'default',
     size: 'default',
-    icon: false,
-    circle: false,
-    loading: false,
-    disabled: false,
-    fluid: false,
     htmlType: 'button',
     tagName: 'button',
     tabindex: '0',
-    ghost: false,
 }); 
 
-export default class Button<T extends ButtonProps = ButtonProps> extends Component<T> {
+
+export class Button extends Component<ButtonProps, ButtonEvents> {
     static template = template;
     static typeDefs = typeDefs;
     static defaults = defaults;
 
-    private buttonGroup: ButtonGroup | null = null;
+    private buttonGroup = inject<ButtonGroup | null>(BUTTON_GROUP, null);
     private elementRef = createRef<HTMLButtonElement>();
-
-    init() {
-        this.buttonGroup = inject('ButtonGroup', null);
-    }
 
     showLoading() {
         this.set('loading', true);
@@ -121,5 +129,3 @@ export default class Button<T extends ButtonProps = ButtonProps> extends Compone
         this.trigger('mouseup', e);
     }
 }
-
-export {Button, ButtonGroup}

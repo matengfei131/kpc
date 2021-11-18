@@ -5,14 +5,19 @@ import {Sizes, sizes} from '../../styles/utils';
 import {TabProps} from './tab';
 import {useActiveBar} from './useActiveBar';
 import {useScroll} from './useScroll';
+export * from './tab';
 
 export interface TabsProps {
-    value: any
-    vertical: boolean
-    size: Sizes
-    type: 'default' | 'card' | 'border-card' | 'no-border-card'
-    closable: boolean
-    beforeChange: Function
+    value?: any
+    vertical?: boolean
+    size?: Sizes
+    type?: 'default' | 'card' | 'border-card' | 'no-border-card'
+    closable?: boolean
+    beforeChange?: (value: any) => boolean | Promise<boolean>
+}
+
+export interface TabsEvents {
+    remove: [any]
 }
 
 const typeDefs: Required<TypeDefs<TabsProps>> = {
@@ -29,7 +34,7 @@ const defaults = (): Partial<TabsProps> => ({
     type: 'default',
 });
 
-export class Tabs extends Component<TabsProps> {
+export class Tabs extends Component<TabsProps, TabsEvents> {
     static template = template;
     static typeDefs = typeDefs;
     static defaults = defaults;
@@ -63,4 +68,3 @@ export class Tabs extends Component<TabsProps> {
     }
 }
 
-export * from './tab';

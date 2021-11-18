@@ -13,14 +13,8 @@ const typeDefs: Required<TypeDefs<BadgeProps>> = {
     disabled: Boolean,
 };
 
-const defaults = (): Partial<BadgeProps> => ({
-    disabled: false
-})
-
-export class Badge<T extends BadgeProps = BadgeProps> extends Component<T> {
+export class Badge extends Component<BadgeProps> {
     static template = template;
     static typeDefs = typeDefs;
-    static defaults = defaults;
 }
-
 

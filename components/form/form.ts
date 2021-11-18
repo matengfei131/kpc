@@ -5,14 +5,30 @@ import {addMethod} from './methods';
 import {bind} from '../utils';
 import type {FormItem} from './item';
 
-export interface FormProps {
+interface FormHTMLAttributes {
+    acceptcharset?: string
+    autocomplete?: string
+    name?: string
+    rel?: string
+    action?: string
+    enctype?: string
+    method?: 'post' | 'get' | 'dialog'
+    novalidate?: boolean
+    target?: string
+}
+
+export interface FormProps extends FormHTMLAttributes {
     labelWidth?: string | number
     layout?: 'horizontal' | 'vertical' | 'inline'
     starOnRequired?: boolean
     size?: 'default' | 'small' | 'mini'
 }
 
-const typeDefs: Required<TypeDefs<FormProps>> = {
+export interface FormEvents {
+    submit: [Event]
+}
+
+const typeDefs: Required<TypeDefs<Omit<FormProps, keyof FormHTMLAttributes>>> = {
     labelWidth: [String, Number],
     layout: ['horizontal', 'vertical', 'inline'],
     starOnRequired: Boolean,
@@ -21,14 +37,13 @@ const typeDefs: Required<TypeDefs<FormProps>> = {
 
 const defaults = (): Partial<FormProps> => ({
     layout: 'horizontal',
-    starOnRequired: false,
     size: 'default',
 });
 
 export const FORM = 'Form';
 export const RECORD_KEY = 'FormRecord';
 
-export class Form extends Component {
+export class Form extends Component<FormProps, FormEvents> {
     static template = template;
     static typeDefs = typeDefs;
     static defaults = defaults;
@@ -40,31 +55,35 @@ export class Form extends Component {
         provide(FORM, this);
     }
 
-    validate() {
+    public validate() {
         return Promise.all(this.items.map(item => item.validate())).then(values => {
             return values.every(value => value);
         });
     }
 
-    getFirstInvalidFormItem() {
+    public getFirstInvalidFormItem() {
         return this.items.find(item => {
-            if (item.get('_isValid') === false) {
+            if (!item.isValid()) {
                 return item;
             }
         });
     }
 
-    @bind
-    onSubmit(e: Event) {
-        e.preventDefault();
-        this.submit(e);
-    }
-
-    submit(e: Event) {
+    public submit(e: Event) {
         this.validate().then(valid => {
             if (valid) {
                 this.trigger('submit', e);
             }
         });
+    }
+
+    public reset() {
+        this.items.forEach(item => item.reset());
+    }
+
+    @bind
+    private onSubmit(e: Event) {
+        e.preventDefault();
+        this.submit(e);
     }
 }

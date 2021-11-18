@@ -6,11 +6,17 @@ import {useTranslate} from './useTranslate';
 import {useMouseEvents} from './useMouseEvents';
 
 export interface ScrollSelectProps {
-    value: any
-    count: number
-    data: Data
+    value?: any
+    count?: number
+    data?: Data
     disabled?: boolean
     disable?: (v: any) => boolean 
+}
+
+export interface ScrollSelectEvents { }
+
+export interface ScrollSelectBlocks {
+    append: null
 }
 
 export type DataItem = {
@@ -33,7 +39,7 @@ const defaults = (): Partial<ScrollSelectProps> => ({
     data: [],
 });
 
-export class ScrollSelect<T extends ScrollSelectProps = ScrollSelectProps> extends Component<T> {
+export class ScrollSelect extends Component<ScrollSelectProps, ScrollSelectEvents, ScrollSelectBlocks> {
     static template = template;
     static typeDefs = typeDefs;
     static defaults = defaults;

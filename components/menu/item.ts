@@ -1,21 +1,29 @@
-import {Component, TypeDefs, inject, provide, VNode} from 'intact';
+import {Component, TypeDefs, inject, provide, VNode, Key} from 'intact';
 import {ROOT_MENU, MENU, Menu, MenuProps} from './menu'
 import {Dropdown, DropdownMenu} from '../dropdown';
 import template from './item.vdt';
-import {bind, findRouter, isExternalLink} from '../utils';
+import {bind, isExternalLink} from '../utils';
 import {useState} from '../../hooks/useState';
 import {useHighlight} from './useHighlight';
+import {useExpanded} from './useExpanded';
+import {useDropdown} from './useDropdown';
+import {useRouter} from '../../hooks/useRouter';
 
 export interface MenuItemProps {
-    key?: string 
+    key: Key 
     to?: string
     dot?: boolean
     disabled?: boolean
 }
 
+export interface MenuItemEvents {
+    click: [MouseEvent]
+    select: [MenuItem, MouseEvent]
+}
+
 const typeDefs: Required<TypeDefs<MenuItemProps>> = {
     key: {
-        type: String,
+        type: [String, Number],
         required: true,
     },
     to: String,
@@ -23,72 +31,34 @@ const typeDefs: Required<TypeDefs<MenuItemProps>> = {
     disabled: Boolean,
 };
 
-const defaults = (): Partial<MenuItemProps> => ({
-    dot: false,
-    disabled: false,
-})
-
 export const MENU_ITEM = 'MenuItem';
 
-export class MenuItem<T extends MenuItemProps = MenuItemProps> extends Component<T> {
+export class MenuItem extends Component<MenuItemProps, MenuItemEvents> {
     static template = template;
     static typeDefs = typeDefs;
-    static defaults = defaults;
-    static $router: Array<String> = [];
 
     public rootMenu = inject<Menu>(ROOT_MENU)!;
     public parentMenu = inject<Menu>(MENU)!;
     public parentMenuItem = inject<MenuItem | null>(MENU_ITEM, null);
 
-    private show = useState<boolean>(false);
+    private expanded = useExpanded(this.rootMenu, this.parentMenu);
     private highlight = useHighlight(this.rootMenu, this.parentMenuItem);
-    private isFirstFloorChildren: boolean = false;
+    private dropdown = useDropdown(this.rootMenu, this.parentMenu);
+    private router = useRouter();
 
     init() {
         provide(MENU_ITEM, this);
-
-        this.set('dot', this.parentMenu.get('dot'));
-        this.isFirstFloorChildren = this.rootMenu === this.parentMenu;
-        this.highlight.updateStatus(this.rootMenu.get('selectedKey'));
-
-        // if selected hide all dropdown menu
-        // the top ancestor dropdown menu can not hide
-        // so we override the method here
-        this.on('select', () => {
-            if (!this.isFirstFloorChildren) {
-                // hide all dropdowns
-                let ancestor;
-                let parent: Menu<MenuProps> | null = this.parentMenu;
-                while (parent) {
-                    const parentMenu = parent.parentMenu;
-                    if (parentMenu && parentMenu === this.rootMenu) {
-                        const lastInput = parent.$lastInput!;
-                        if (lastInput!.tag === DropdownMenu) {
-                            ancestor = (lastInput.children as Dropdown).dropdown
-                        }
-                        break;
-                    }
-                    parent = parent!.parentMenu;
-                }
-                ancestor && ancestor.hide(true);
-            }
-        });
-    }
-
-    @bind
-    mounted() {
-        MenuItem.$router = findRouter(this);
     }
 
     @bind
     public onClick(hasSubMenu: Menu, e: MouseEvent) {
-        const {disabled, key, to} = this.get();
+        const {disabled, to} = this.get();
         if (disabled) return;
         
         if (hasSubMenu) {
-            this.rootMenu.toggleExpand(key!, this.parentMenu);
+            this.expanded.toggle();
         } else {
-            this.rootMenu.select(key!);
+            this.highlight.select();
         }
 
         this.trigger('click', e);
@@ -96,20 +66,14 @@ export class MenuItem<T extends MenuItemProps = MenuItemProps> extends Component
         if (!hasSubMenu) {
             this.trigger('select', this, e);
             if (to) {
-                const {$router} = MenuItem;
-                if ($router && !isExternalLink(to)) {
-                    $router.push(to!);
+                const router = this.router.value;
+                if (router && !isExternalLink(to)) {
+                    router.push(to!);
                 } else {
                     location.href = to!;
                 }
             }
         }
     }
-
-    @bind
-    private onDropdownShowChange(v: boolean) {
-        this.show.set(v);
-    }
 }
-
 
